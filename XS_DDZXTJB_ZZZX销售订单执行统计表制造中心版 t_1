@@ -1,0 +1,389 @@
+SELECT 
+       so_saleorder.so_marccode1,
+       so_saleorder.so_marcname1,
+       so_saleorder.so_marlx,
+       so_saleorder.ccustmaterialid ,
+       so_saleorder.ms ,
+       so_saleorder.cmaterialvid,
+       so_saleorder.ctzxkj,
+       so_saleorder.sodydj,
+       so_saleorder.sokhcgh,
+       so_saleorder.sokhjsh,
+       so_saleorder.soddxz,
+       so_saleorder.so_marccode2,
+       so_saleorder.so_marcname2,
+       so_saleorder.so_marccode3,
+       so_saleorder.so_marcname3,
+       so_saleorder.soxs,
+       so_saleorder.sonqttaxprice,
+       so_saleorder.sonqtorigtaxprice,
+       so_saleorder.sogxxb,
+       so_saleorder.sogxcj,
+       so_saleorder.sogxlb,
+       so_saleorder.sogxfpbz,
+       so_saleorder.csaleorderbid,
+       so_saleorder.vclosereason,
+       so_saleorder.cttrantypename,
+       so_saleorder.ctincomename,       
+       so_saleorder.pk_customer,
+       so_saleorder.ctcurrtypename ,
+       so_saleorder.ctcunitid,
+       so_saleorder.ctmeasname,     
+       so_saleorder.ctcustmatname,
+       so_saleorder.ctcustname,
+       so_saleorder.ctcustshortname,
+       so_saleorder.ctcustpq,
+       so_saleorder.ctcclassname,       
+       so_saleorder.ctarename,  
+       so_saleorder.ctpsorgname,
+       so_saleorder.ctpsname,  
+       --so_saleorder.ctarcustname,  
+       (case when so_saleorder.ctcclassname in ('移动','联通','电信','广电') and so_saleorder.CTARENAME not in ('广东省','湖北省')
+       then so_saleorder.ctarcustname else so_saleorder.ctcustshortname end )  ctarcustname,    
+       so_saleorder.pk_custclass,   
+       so_saleorder.pk_areacl,
+       so_saleorder.pk_org,
+       so_saleorder.sovbillcode,
+       so_saleorder.socsaleorderid,
+       so_saleorder.sodbilldate ,
+       so_saleorder.ctnexchangerate ,
+       so_saleorder.ctrantypeid ,
+       --so_saleorder.sohzt,
+      -- ' ' sozxkj,
+       --so_saleorder.sotrantypename,
+       --so_saleorder.soincomename,
+       so_saleorder.sovnote,
+       so_saleorder.socunitid,
+       --so_saleorder.cctmanagebid tmpcctmanagebid,
+       --so_saleorder.cctmanageid tmpcctmanageid,
+       sum(so_saleorder.sonnum) sonnum,
+       sum(so_saleorder.sontaxmny) sontaxmny,
+       sum(so_saleorder.sonorigtaxmny) sonorigtaxmny,
+       sum(so_saleorder.sontotalsendnum) sontotalsendnum,
+       sum(so_saleorder.sontotaloutnnum) sontotaloutnnum,
+       sum(so_saleorder.sontotaloutnum) sontotaloutnum,
+       sum(so_saleorder.sontotalinvoicenum) sontotalinvoicenum,
+       sum(so_saleorder.sontotaloutmny) sontotaloutmny,
+       sum(so_saleorder.sontotalinvoicemny) sontotalinvoicemny,
+       sum(so_saleorder.sontotalpaymny) sontotalpaymny       
+ FROM      
+ (SELECT      
+       so_marbasclass.so_marccode1,
+       so_marbasclass.so_marcname1,
+       (case when so_saleorder.pk_org in ('0001A110000000003UZ2','0001A110000000003U2Q') then           
+         (case when bd_material_v.name  like '%GY%' then '室外缆' else  
+          (case when bd_material_v.name like '%跳线%' then '跳线' else 
+           (case when bd_material_v.name like '%分路器%' then '分路器' else 
+            (case when bd_material_v.name  like '%缆%' then
+             (case when bd_material_v.name like '%蝶形%' then '引入缆' else '室内缆' end) else '其他' end) end) 
+             end )
+      /*           
+           (case when bd_material_v.name  like '%缆%' then
+            (case when bd_material_v.name like '%蝶形%' then '引入缆' else '室内缆' end) 
+            else 
+              (case when bd_material_v.name like '%跳线%' then '跳线' else 
+               (case when bd_material_v.name like '%分路器%' then '分路器' else '其他' end) end) 
+              end)    */     
+           --(case when bd_material_v.name like '%蝶形%' then '引入缆' else '室内缆' end)           
+           end)           
+       else  so_marbasclass.so_marlx end) so_marlx, 
+       bd_material_v.def65  ms, 
+       /*substr(bd_material_v.materialspec, instr(bd_material_v.materialspec,',',1,7)+1, 
+       instr(bd_material_v.materialspec,'米',-1)-instr(bd_material_v.materialspec,',',1,7)) ms,   */     
+       so_saleorder_b.ccustmaterialid ,
+       so_saleorder_b.cmaterialvid,
+       so_saleorder.vdef2 sokhcgh,
+       khjsh.name sokhjsh,
+       so_saleorder.vdef20 ctzxkj,
+       so_saleorder.vdef7 sodydj,
+       (case  when  so_saleorder_b.blargessflag='N' and nvl(vddxz.NAME, '~') = '~' then '\' 
+       else (case when so_saleorder_b.blargessflag='Y' and (vddxz.NAME='普通' or nvl(vddxz.NAME, '~') = '~') then '赠品' else vddxz.NAME end) end)   soddxz,
+       --(case  when nvl(vddxz.name, '~') = '~' then '/' else vddxz.name end) soddxz,
+       --vddxz.name  soddxz,
+       so_marbasclass.so_marccode2,
+       so_marbasclass.so_marcname2,
+       so_marbasclass.so_marccode3,
+       so_marbasclass.so_marcname3,
+       to_number(vxs.name) soxs,
+       so_saleorder_b.cunitid  socunitid ,
+       so_saleorder_b.nqttaxprice sonqttaxprice,
+       so_saleorder_b.nqtorigtaxprice sonqtorigtaxprice,
+       so_saleorder_b.nnum sonnum ,
+       so_saleorder_b.ntaxmny sontaxmny,
+       so_saleorder_b.norigtaxmny sonorigtaxmny,
+       vgxlb.name || vgxcj.name sogxxb,
+       vgxcj.name sogxcj,
+       vgxlb.name sogxlb,
+       so_saleorder_b.text1 sogxfpbz,
+       ENUMVALUEso.name sohzt,
+       so_saleorder_b.nexchangerate  ctnexchangerate,
+       --t_1.SONQTTAXPRICE  t_1.SONTOTALINVOICEMNY
+       bd_transporttype.name cttrantypename,
+       bd_income.name ctincomename,       
+       so_saleorder.ccustomerid pk_customer,
+       bd_currtype.name ctcurrtypename ,
+       so_saleorder_b.cunitid ctcunitid,
+       bd_measdoc.name ctmeasname,     
+       bd_custmaterial.name ctcustmatname,
+       bd_customer.name ctcustname,
+       bd_customer.shortname ctcustshortname,
+       bd_customer.def2 ctcustpq,
+       bd_custclass.name ctcclassname,
+       bd_areacl.name ctarename,  
+       org_dept.name ctpsorgname,
+       bd_psndoc.name ctpsname,  
+       bd_areacl.name || bd_custclass.name  ctarcustname,       
+       bd_customer.pk_custclass,   
+       bd_customer.pk_areacl,
+       so_saleorder.pk_org,
+       so_saleorder.vbillcode sovbillcode,
+       so_saleorder.csaleorderid  socsaleorderid,
+       so_saleorder.ctrantypeid ,
+       substr(so_saleorder.dmakedate,1,10) sodbilldate ,
+      -- ' ' sozxkj,
+       /*bd_transporttype.name sotrantypename,
+       bd_income.name soincomename,*/
+       so_saleorder.vnote sovnote,
+       so_saleorder_b.csaleorderbid,
+       so_saleorder_b.vclosereason,
+       so_saleorder_b.csrcbid   cctmanagebid,
+       so_saleorder_b.csrcid   cctmanageid,
+       so_saleorder_exe.sontotalsendnum,
+       --so_saleorder_exe.sontotaloutnum*(so_saleorder_b.ntaxmny /nvl(so_saleorder_b.nnum,1) )  sontotaloutmny,
+        (case when ic_saleout_b.sontotaloutnum=0 then so_saleorder_exe.sontotaloutnum else ic_saleout_b.sontotaloutnum end)
+       *(case when so_saleorder_b.nexchangerate<>1 then so_saleorder_b.nqtorigtaxprice*so_saleorder_b.nexchangerate else so_saleorder_b.nqttaxprice  end )  sontotaloutmny,
+       ic_saleout_b.sontotaloutnnum  sontotaloutnnum,
+       (case when ic_saleout_b.sontotaloutnum=0 then so_saleorder_exe.sontotaloutnum else ic_saleout_b.sontotaloutnum end) sontotaloutnum,
+       --ic_saleout_b.sontotaloutnum,
+       --so_saleinvoice_b.sontotalinvoicenum,
+       (case when so_saleinvoice_b.sontotalinvoicenum=0 then so_saleorder_exe.sontotalinvoicenum else so_saleinvoice_b.sontotalinvoicenum end) sontotalinvoicenum,
+       --so_saleorder_exe.sontotalinvoicenum*(so_saleorder_b.ntaxmny /nvl(so_saleorder_b.nnum,1) )  sontotalinvoicemny,
+       --so_saleinvoice_b.norigtaxmny   sontotalinvoicemny,
+       so_saleinvoice_b.ntaxmny   sontotalinvoicemny,        
+       so_saleorder_exe.sontotalpaymny
+ FROM  so_saleorder_b so_saleorder_b   
+  JOIN so_saleorder so_saleorder
+    ON (so_saleorder_b.csaleorderid = so_saleorder.csaleorderid AND
+       so_saleorder.dr = 0 and so_saleorder_b.dr = 0)
+-- and so_saleorder_b.frowstatus in (parameter('p_sohzt'))
+and (case  when nvl(so_saleorder_b.vbdef7, '~') = '~' then 999 else to_number(so_saleorder_b.vbdef7) end) in (parameter('p_sosohzt'))
+ --and (case  when nvl(so_saleorder_b.vbdef54, '~') = '~' then 999 else to_number(so_saleorder_b.vbdef54) end) in (parameter('p_soddxz'))
+--and nvl(so_saleorder.vdef3, '~') in (parameter('p_sosoddxz'))
+   join (select vbillcode, max(nvl(iversion,0) ) as iversion  from so_saleorder where dr = 0 group by vbillcode) tmp_so
+  on tmp_so.vbillcode = so_saleorder.vbillcode and tmp_so.iversion  = nvl(so_saleorder.iversion ,0)  
+  
+   LEFT JOIN bd_transporttype bd_transporttype
+    ON so_saleorder.ctransporttypeid = bd_transporttype.pk_transporttype    and nvl(bd_transporttype.dr,0) = 0  
+ LEFT JOIN bd_currtype bd_currtype
+    ON so_saleorder_b.ccurrencyid  = bd_currtype.pk_currtype      and nvl(bd_currtype.dr,0) = 0   
+ LEFT JOIN bd_income bd_income
+    ON so_saleorder.cpaytermid   = bd_income.pk_income    and nvl(bd_income.dr,0) = 0   
+ LEFT JOIN bd_customer bd_customer
+    ON (so_saleorder.ccustomerid  = bd_customer.pk_customer)    and nvl(bd_customer.dr,0) = 0
+ LEFT JOIN bd_custclass bd_custclass
+    ON (bd_customer.pk_custclass  = bd_custclass.pk_custclass )   and nvl(bd_custclass.dr,0) = 0
+ LEFT JOIN bd_areacl bd_areacl
+    ON (bd_customer.pk_areacl  = bd_areacl.pk_areacl  )    and nvl(bd_areacl.dr,0) = 0
+ LEFT JOIN bd_psndoc bd_psndoc
+    ON (so_saleorder.cemployeeid   = bd_psndoc.pk_psndoc  )    and nvl(bd_psndoc.dr,0) = 0
+ left join 
+(select distinct bd_psnjob.pk_psndoc,org_dept.name
+from bd_psnjob bd_psnjob
+left join org_dept org_dept
+on bd_psnjob.pk_dept=org_dept.pk_dept
+where nvl(bd_psnjob.dr,0)=0 and nvl(org_dept.dr,0)=0 and bd_psnjob.ismainjob ='Y' and bd_psnjob.enddutydate is null)org_dept
+ON (bd_psndoc.pk_psndoc  = org_dept. pk_psndoc )   
+ /*LEFT JOIN org_dept org_dept
+    ON (ct_sale.depid  = org_dept. pk_dept  )      and nvl(org_dept.dr,0) = 0*/
+ LEFT JOIN bd_custmaterial bd_custmaterial 
+    ON (so_saleorder_b.ccustmaterialid  = bd_custmaterial. pk_custmaterial )    and nvl(bd_custmaterial.dr,0) = 0
+ LEFT JOIN bd_measdoc bd_measdoc
+    ON (so_saleorder_b.castunitid  = bd_measdoc.  pk_measdoc )    and nvl(bd_measdoc.dr,0) = 0 
+  
+  LEFT JOIN bd_material bd_material_v
+    ON so_saleorder_b.cmaterialvid  = bd_material_v.pk_material and nvl(bd_material_v.dr,0) = 0 
+  LEFT JOIN MD_ENUMVALUE ENUMVALUEso
+    ON ENUMVALUEso.ID = '380e1847-6624-48b9-b525-2bcba39b6d7d'
+   AND ENUMVALUEso.VALUE = so_saleorder_b.frowstatus  and nvl(ENUMVALUEso.dr,0) = 0            
+  left join
+(select so_saleinvoice_b.cfirstid ,so_saleinvoice_b.cfirstbid ,sum(so_saleinvoice_b.ntaxmny ) ntaxmny , --sum(so_saleinvoice_b.vbdef10 ) sontotalinvoicenum 
+sum(nvl((case when so_saleinvoice_b.vbdef10='~' then null else so_saleinvoice_b.vbdef10 end),0))   sontotalinvoicenum 
+FROM so_saleinvoice so_saleinvoice
+ INNER JOIN so_saleinvoice_b so_saleinvoice_b
+    ON so_saleinvoice.csaleinvoiceid = so_saleinvoice_b.csaleinvoiceid and so_saleinvoice.dr = 0   and so_saleinvoice_b.dr = 0
+where substr( so_saleinvoice_b.dbilldate , 1, 10)>=parameter('p_soinvs') and substr( so_saleinvoice_b.dbilldate , 1, 10)<=parameter('p_soinve')
+group by  so_saleinvoice_b.cfirstid ,so_saleinvoice_b.cfirstbid  ) so_saleinvoice_b
+on so_saleinvoice_b.cfirstid=so_saleorder_b.csaleorderid  and so_saleinvoice_b.cfirstbid=so_saleorder_b.csaleorderbid 
+ 
+left join
+(select ic_saleout_b.cfirstbillhid ,ic_saleout_b.cfirstbillbid ,--sum(ic_saleout_b.vbdef13 ) sontotaloutnum --sum(so_saleinvoice_b.norigtaxmny ) norigtaxmny 
+sum(nvl(ic_saleout_b.nnum,0)) sontotaloutnnum,
+sum(nvl((case when ic_saleout_b.vbdef13='~' then null else ic_saleout_b.vbdef13 end),0))  sontotaloutnum
+FROM ic_saleout_h ic_saleout_h INNER JOIN ic_saleout_b ic_saleout_b
+    ON ic_saleout_h.cgeneralhid = ic_saleout_b.cgeneralhid and ic_saleout_h.dr = 0   and ic_saleout_b.dr = 0
+where substr( ic_saleout_b.dbizdate, 1, 10)>=parameter('p_soouts') and substr( ic_saleout_b.dbizdate, 1, 10)<=parameter('p_sooute')
+group by  ic_saleout_b.cfirstbillhid ,ic_saleout_b.cfirstbillbid  ) ic_saleout_b
+ON ic_saleout_b.cfirstbillhid =so_saleorder_b.csaleorderid  and ic_saleout_b.cfirstbillbid = so_saleorder_b.csaleorderbid
+  /*LEFT JOIN bd_transporttype bd_transporttype
+    ON so_saleorder.ctransporttypeid = bd_transporttype.pk_transporttype  
+  LEFT JOIN bd_income bd_income
+    ON so_saleorder.cpaytermid  = bd_income.pk_income    */   
+  LEFT JOIN (select so_saleorder_exe.csaleorderbid,
+             sum(so_saleorder_exe.ntotalsendnum) sontotalsendnum, 
+             sum(so_saleorder_exe.ntotaloutnum) sontotaloutnum, 
+             sum(so_saleorder_exe.ntotalinvoicenum) sontotalinvoicenum,
+             sum(so_saleorder_exe.ntotalpaymny) sontotalpaymny
+        from so_saleorder_exe so_saleorder_exe
+        where so_saleorder_exe.dr = 0
+        group by so_saleorder_exe.csaleorderbid
+        )so_saleorder_exe
+    ON so_saleorder_b.csaleorderbid = so_saleorder_exe.csaleorderbid  
+  left JOIN 
+ (select bd.code    ,
+       bd.name      ,
+       bd.enablestate       ,
+       bd.pk_defdoc,
+       bd.ts
+  from bd_defdoc bd
+  where bd.pk_defdoclist = (select bdl.pk_defdoclist
+                             from bd_defdoclist bdl
+                            where name = '客户结算号' and bdl.dr = 0 
+                            )
+                            and bd.enablestate = 2  and bd.dr = 0) khjsh
+    ON so_saleorder.vdef10 = khjsh.pk_defdoc  
+   left JOIN 
+ (select bd.code    ,
+  (case when bd.name='芯数无指定' then 0 else to_number(bd.name) end)  name ,   
+       --bd.name      ,
+       bd.enablestate       ,
+       bd.pk_defdoc,
+       bd.ts
+  from bd_defdoc bd
+  where bd.pk_defdoclist = (select bdl.pk_defdoclist
+                             from bd_defdoclist bdl
+                            where name = '芯数'  and bdl.dr = 0)
+                            and bd.enablestate = 2  and bd.dr = 0) vxs
+    ON bd_material_v.def1 = vxs.pk_defdoc  
+    left JOIN        
+  (select bd.code    ,
+       bd.name      ,
+       bd.enablestate       ,
+       bd.pk_defdoc,
+       bd.ts
+  from bd_defdoc bd
+  where bd.pk_defdoclist = (select bdl.pk_defdoclist
+                             from bd_defdoclist bdl
+                            where name = '光纤类型'  and bdl.dr = 0)
+                            and bd.enablestate = 2  and bd.dr = 0) vgxlb  
+     ON so_saleorder_b.vbdef55 = vgxlb.pk_defdoc  
+  left JOIN        
+  (select bd.code    ,
+       bd.name      ,
+       bd.enablestate       ,
+       bd.pk_defdoc,
+       bd.ts
+  from bd_defdoc bd
+  where bd.pk_defdoclist = (select bdl.pk_defdoclist
+                             from bd_defdoclist bdl
+                            where  name = '销售订单性质'   and bdl.dr = 0)
+                            and bd.enablestate = 2  and bd.dr = 0) vddxz  
+     ON so_saleorder_b.vbdef54 = vddxz.pk_defdoc --and (case  when nvl(vddxz.name, '~') = '~' then '一' else vddxz.name end) in (parameter('p_sosoddxz'))   
+  left JOIN        
+  (select bd.code    ,
+       bd.name      ,
+       bd.enablestate       ,
+       bd.pk_defdoc,
+       bd.ts
+  from bd_defdoc bd
+  where bd.pk_defdoclist = (select bdl.pk_defdoclist
+                             from bd_defdoclist bdl
+                            where name = '厂家'  and bdl.dr = 0)
+                            and bd.enablestate = 2  and bd.dr = 0) vgxcj  
+     ON so_saleorder_b.vbdef21 = vgxcj.pk_defdoc                                  
+  LEFT JOIN (SELECT bd_marbasclass3.pk_marbasclass pk_marbasclass,
+                    bd_marbasclass3.code           so_marccode3,
+                    bd_marbasclass3.name           so_marcname3,
+                    bd_marbasclass2.code           so_marccode2,
+                    bd_marbasclass2.name           so_marcname2,
+                    bd_marbasclass1.code           so_marccode1,
+                    bd_marbasclass1.name           so_marcname1,
+                       
+                (         
+                  case when  bd_marbasclass1.name='纤缆成品'  
+                    then (case when  bd_marbasclass3.name like '%ADSS%' then 'ADSS' 
+                    else (case when  SUBSTR(bd_marbasclass3.name,1,2)='GY' 
+                    then (case when  SUBSTR(bd_marbasclass3.name,3,100) like '%C8%'  then '8字缆' 
+                    else (case when  SUBSTR(bd_marbasclass3.name,3,100) like '%G%'  then '骨架缆' 
+                    else (case when  SUBSTR(bd_marbasclass3.name,3,100) like '%D%' and SUBSTR(bd_marbasclass3.name,3,100) not like '%G%' 
+                       then '带缆' else '普缆' end) end) end)  else '其他' end) end)  else  bd_marbasclass1.name end
+                         )   so_marlx     
+               FROM bd_marbasclass bd_marbasclass3
+               LEFT JOIN bd_marbasclass bd_marbasclass2
+                 ON bd_marbasclass3.pk_parent =
+                    bd_marbasclass2.pk_marbasclass and nvl(bd_marbasclass3.dr,0) = 0  and nvl(bd_marbasclass2.dr,0) = 0
+               LEFT JOIN bd_marbasclass bd_marbasclass1
+                 ON bd_marbasclass2.pk_parent =
+                    bd_marbasclass1.pk_marbasclass
+                     and nvl(bd_marbasclass1.dr ,0)= 0) so_marbasclass
+    ON (bd_material_v.pk_marbasclass = so_marbasclass.pk_marbasclass)
+)so_saleorder
+where so_saleorder.soddxz in (parameter('p_sosoddxz'))
+group by 
+       so_saleorder.so_marccode1,
+       so_saleorder.so_marcname1,
+       so_saleorder.so_marlx,
+       so_saleorder.ccustmaterialid ,
+       so_saleorder.ms ,
+       so_saleorder.cmaterialvid,
+       so_saleorder.ctzxkj,
+       so_saleorder.sodydj,
+       so_saleorder.sokhcgh,
+       so_saleorder.sokhjsh,
+       so_saleorder.soddxz,
+       so_saleorder.so_marccode2,
+       so_saleorder.so_marcname2,
+       so_saleorder.so_marccode3,
+       so_saleorder.so_marcname3,
+       so_saleorder.soxs,
+       so_saleorder.socunitid,
+       so_saleorder.sonqttaxprice,
+       so_saleorder.sonqtorigtaxprice,
+       so_saleorder.sogxxb,
+       so_saleorder.sogxcj,
+       so_saleorder.sogxlb,
+       so_saleorder.sogxfpbz,
+       so_saleorder.ctrantypeid ,
+       so_saleorder.csaleorderbid,
+       so_saleorder.vclosereason,
+       so_saleorder.cttrantypename,
+       so_saleorder.ctincomename,       
+       so_saleorder.pk_customer,
+       so_saleorder.ctcurrtypename ,
+       so_saleorder.ctcunitid,
+       so_saleorder.ctmeasname,     
+       so_saleorder.ctcustmatname,
+       so_saleorder.ctcustname,
+       so_saleorder.ctcustshortname,
+       so_saleorder.ctcustpq,
+       so_saleorder.ctcclassname,
+       so_saleorder.ctarename,  
+       so_saleorder.ctpsorgname,
+       so_saleorder.ctpsname,  
+       --so_saleorder.ctarcustname,  
+       (case when so_saleorder.ctcclassname in ('移动','联通','电信','广电') and so_saleorder.CTARENAME not in ('广东省','湖北省')
+       then so_saleorder.ctarcustname else so_saleorder.ctcustshortname end ) ,     
+       so_saleorder.pk_custclass,   
+       so_saleorder.pk_areacl,
+       --so_saleorder.sohzt,
+      -- ' ' sozxkj,
+       /*so_saleorder.sotrantypename,
+       so_saleorder.soincomename,*/
+       so_saleorder.sovnote,
+       so_saleorder.pk_org,
+       so_saleorder.ctnexchangerate ,
+       so_saleorder.sovbillcode,
+       so_saleorder.socsaleorderid,
+       so_saleorder.sodbilldate 
+       --so_saleorder.cctmanagebid,
+       --so_saleorder.cctmanageid
+
