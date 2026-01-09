@@ -374,16 +374,10 @@ group by
        then so_saleorder.ctarcustname else so_saleorder.ctcustshortname end ) ,     
        so_saleorder.pk_custclass,   
        so_saleorder.pk_areacl,
-       --so_saleorder.sohzt,
-      -- ' ' sozxkj,
-       /*so_saleorder.sotrantypename,
-       so_saleorder.soincomename,*/
        so_saleorder.sovnote,
        so_saleorder.pk_org,
        so_saleorder.ctnexchangerate ,
        so_saleorder.sovbillcode,
        so_saleorder.socsaleorderid,
        so_saleorder.sodbilldate 
-       --so_saleorder.cctmanagebid,
-       --so_saleorder.cctmanageid
 
