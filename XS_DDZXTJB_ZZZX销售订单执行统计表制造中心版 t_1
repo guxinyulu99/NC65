@@ -187,11 +187,20 @@ and (case  when nvl(so_saleorder_b.vbdef7, '~') = '~' then 999 else to_number(so
  LEFT JOIN bd_psndoc bd_psndoc
     ON (so_saleorder.cemployeeid   = bd_psndoc.pk_psndoc  )    and nvl(bd_psndoc.dr,0) = 0
  left join 
-(select distinct bd_psnjob.pk_psndoc,org_dept.name
-from bd_psnjob bd_psnjob
-left join org_dept org_dept
-on bd_psnjob.pk_dept=org_dept.pk_dept
-where nvl(bd_psnjob.dr,0)=0 and nvl(org_dept.dr,0)=0 and bd_psnjob.ismainjob ='Y' and bd_psnjob.enddutydate is null)org_dept
+--(select distinct bd_psnjob.pk_psndoc,org_dept.name
+--from bd_psnjob bd_psnjob
+--left join org_dept org_dept
+--on bd_psnjob.pk_dept=org_dept.pk_dept
+--where nvl(bd_psnjob.dr,0)=0 and nvl(org_dept.dr,0)=0 and bd_psnjob.ismainjob ='Y' and bd_psnjob.enddutydate is null)org_dept
+ 
+(SELECT  pk_psndoc,
+    org_dept.name FROM 
+(SELECT pk_psndoc, max(PK_DEPT) pk_dept FROM bd_psnjob 
+WHERE nvl(bd_psnjob.dr, 0) = 0         
+        AND bd_psnjob.ismainjob = 'Y' 
+        AND bd_psnjob.enddutydate IS NULL GROUP BY pk_psndoc )bd_psnjob
+LEFT JOIN org_dept org_dept ON bd_psnjob.pk_dept = org_dept.pk_dept)org_dept
+ 
 ON (bd_psndoc.pk_psndoc  = org_dept. pk_psndoc )   
  /*LEFT JOIN org_dept org_dept
     ON (ct_sale.depid  = org_dept. pk_dept  )      and nvl(org_dept.dr,0) = 0*/
@@ -374,10 +383,16 @@ group by
        then so_saleorder.ctarcustname else so_saleorder.ctcustshortname end ) ,     
        so_saleorder.pk_custclass,   
        so_saleorder.pk_areacl,
+       --so_saleorder.sohzt,
+      -- ' ' sozxkj,
+       /*so_saleorder.sotrantypename,
+       so_saleorder.soincomename,*/
        so_saleorder.sovnote,
        so_saleorder.pk_org,
        so_saleorder.ctnexchangerate ,
        so_saleorder.sovbillcode,
        so_saleorder.socsaleorderid,
        so_saleorder.sodbilldate 
+       --so_saleorder.cctmanagebid,
+       --so_saleorder.cctmanageid
 
