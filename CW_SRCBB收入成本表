@@ -1,0 +1,89 @@
+---备份  原始文档 8026  2025年12月9日14点42分  t_1
+
+select invoice.pk_org,invoice.ordercode,invoice.cordercustid ,invoice.cmaterialvid,invoice.invoicennum,invoice.local_notax_de,
+ibill.iannum ,ibill.ianmny
+from 
+(
+select ttt.pk_org,ttt.ordercode,ttt.cfirstid,ttt.cordercustid ,ttt.cmaterialvid,
+ sum(ttt.invoicennum) invoicennum,sum(ar_recitem.local_notax_de) local_notax_de
+from
+(
+SELECT so_saleinvoice.pk_org pk_org,
+       --so_saleorder.csaleorderid,      
+       so_saleorder.vbillcode ordercode,
+       so_saleinvoice.csaleinvoiceid,
+       --so_saleinvoice.vbillcode invoicecode,
+       so_saleinvoice_b.cfirstid,
+       so_saleinvoice_b.cordercustid ,
+       so_saleinvoice_b.cmaterialvid cmaterialvid,
+       sum(nvl(so_saleinvoice_b.nnum,0)) invoicennum
+       --(ar_recitem.local_notax_de) local_notax_de
+  FROM so_saleinvoice so_saleinvoice
+ INNER JOIN so_saleinvoice_b so_saleinvoice_b
+    ON so_saleinvoice.csaleinvoiceid = so_saleinvoice_b.csaleinvoiceid and so_saleinvoice.dr = 0  AND so_saleinvoice_b.dr = 0
+ left join
+    ( select so_saleorder_b.csaleorderid,so_saleorder_b.csaleorderbid,so_saleorder.vbillcode
+      from   so_saleorder so_saleorder INNER JOIN so_saleorder_b so_saleorder_b
+      ON so_saleorder.csaleorderid = so_saleorder_b.csaleorderid -- and nvl(so_saleorder_b.vbdef7, '~') = '~' 
+      and so_saleorder.dr = 0   AND so_saleorder_b.dr = 0
+      join (select vbillcode, max(nvl(iversion,0) ) as iversion  from so_saleorder where dr = 0 group by vbillcode) tmp_so
+      on tmp_so.vbillcode = so_saleorder.vbillcode and tmp_so.iversion  = nvl(so_saleorder.iversion,0)   
+    ) so_saleorder
+ ON so_saleinvoice_b.cfirstid = so_saleorder.csaleorderid  and so_saleinvoice_b.cfirstbid= so_saleorder.csaleorderbid    
+ WHERE   --so_saleinvoice.vbillcode='XSFP18042723' 
+ substr(so_saleinvoice.dbilldate, 1, 10)>= parameter('pfp_stdate') and substr(so_saleinvoice.dbilldate, 1, 10)<= parameter('pfp_enddate')
+ group by so_saleinvoice.pk_org,
+       --so_saleorder.csaleorderid,
+       so_saleorder.vbillcode,
+       so_saleinvoice.csaleinvoiceid,
+      -- so_saleinvoice.vbillcode ,
+       so_saleinvoice_b.cfirstid,
+       so_saleinvoice_b.cordercustid ,
+       so_saleinvoice_b.cmaterialvid
+       --,ar_recitem.local_notax_de
+ ) ttt          
+left join
+   ( select ar_recitem.src_billid ,ar_recitem.top_billid ,ar_recitem.ordercubasdoc ,ar_recitem.material ,
+   sum(nvl(ar_recitem.local_notax_de,0) ) local_notax_de
+     from ar_recitem  ar_recitem    
+     inner JOIN ar_recbill  ar_recbill  ON ar_recitem.pk_recbill=ar_recbill.pk_recbill and ar_recbill.dr=0 and ar_recitem.dr=0 
+     group by ar_recitem.src_billid ,ar_recitem.top_billid ,  ar_recitem.ordercubasdoc ,ar_recitem.material
+   ) ar_recitem
+ on ttt.csaleinvoiceid=ar_recitem.top_billid and ttt.cordercustid=ar_recitem.ordercubasdoc 
+ and  ttt.cmaterialvid= ar_recitem.material  and ttt.cfirstid=ar_recitem.src_billid 
+ group by  ttt.pk_org,ttt.ordercode,ttt.cfirstid,ttt.cordercustid ,ttt.cmaterialvid 
+) invoice 
+left join 
+(
+select so_saleorder.vbillcode,ia_ibill.cfirstid,ia_ibill.casscustid ,ia_ibill.cinventoryid ,--ia_ibill.vbillcode,
+sum(nvl(ia_ibill.nnum,0)) iannum ,sum(nvl(ia_ibill.nmny,0)) ianmny 
+from
+(
+select ia_i5bill_b.cfirstid,ia_i5bill_b.cfirstbid,ia_i5bill_b.casscustid ,ia_i5bill_b.cinventoryid ,ia_i5bill.vbillcode,
+(case when ia_i5bill.fintransitflag=1 then nvl(ia_i5bill_b.nnum,0) else 0-nvl(ia_i5bill_b.nnum,0) end ) nnum ,
+(case when ia_i5bill.fintransitflag=1 then nvl(ia_i5bill_b.nmny,0) else 0-nvl(ia_i5bill_b.nmny,0) end ) nmny 
+from ia_i5bill_b  ia_i5bill_b  inner join ia_i5bill  ia_i5bill
+on ia_i5bill_b.cbillid =ia_i5bill.cbillid and ia_i5bill_b.dr=0 and ia_i5bill.dr=0 and ia_i5bill.fintransitflag <>0
+where ia_i5bill.pk_org<>'1001A1100000000D19KC' 
+ and ia_i5bill.caccountperiod>=substr( parameter('pfp_stdate'), 1, 7)  and ia_i5bill.caccountperiod<=substr(parameter('pfp_enddate'), 1, 7)
+union all
+select  ia_ijbill_b.cfirstid,ia_ijbill_b.cfirstbid,ia_ijbill_b.casscustid ,ia_ijbill_b.cinventoryid ,ia_ijbill.vbillcode,
+(case when ia_ijbill.fintransitflag=1 then nvl(ia_ijbill_b.nnum,0) else 0-nvl(ia_ijbill_b.nnum,0) end ) nnum ,
+(case when ia_ijbill.fintransitflag=1 then nvl(ia_ijbill_b.nmny,0) else 0-nvl(ia_ijbill_b.nmny,0) end ) nmny  
+from  ia_ijbill_b  ia_ijbill_b  inner join ia_ijbill ia_ijbill 
+on ia_ijbill_b.cbillid =ia_ijbill.cbillid  and ia_ijbill.dr=0 and ia_ijbill_b.dr=0 and ia_ijbill.fintransitflag <>0
+where ia_ijbill.pk_org<>'1001A1100000000D19KC'
+and ia_ijbill.caccountperiod>=substr( parameter('pfp_stdate'), 1, 7)  and ia_ijbill.caccountperiod<=substr(parameter('pfp_enddate'), 1, 7)
+)ia_ibill
+left join
+    ( select so_saleorder_b.csaleorderid,so_saleorder_b.csaleorderbid,so_saleorder.vbillcode--,so_saleorder.ccustomerid 
+      from   so_saleorder so_saleorder INNER JOIN so_saleorder_b so_saleorder_b
+      ON so_saleorder.csaleorderid = so_saleorder_b.csaleorderid -- and nvl(so_saleorder_b.vbdef7, '~') = '~' 
+      and so_saleorder.dr = 0   AND so_saleorder_b.dr = 0
+      join (select vbillcode, max(nvl(iversion,0) ) as iversion  from so_saleorder where dr = 0 group by vbillcode) tmp_so
+      on tmp_so.vbillcode = so_saleorder.vbillcode and tmp_so.iversion  = nvl(so_saleorder.iversion,0)   
+    ) so_saleorder
+ON ia_ibill.cfirstid = so_saleorder.csaleorderid  and ia_ibill.cfirstbid= so_saleorder.csaleorderbid 
+group by so_saleorder.vbillcode,ia_ibill.cfirstid,ia_ibill.casscustid ,ia_ibill.cinventoryid --,ia_ibill.vbillcode
+) ibill
+on invoice.cfirstid=ibill.cfirstid and invoice.cordercustid=ibill.casscustid  and invoice.cmaterialvid=ibill.cinventoryid
