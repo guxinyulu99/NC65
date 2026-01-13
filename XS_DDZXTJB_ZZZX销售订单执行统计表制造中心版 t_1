@@ -382,11 +382,7 @@ group by
        (case when so_saleorder.ctcclassname in ('移动','联通','电信','广电') and so_saleorder.CTARENAME not in ('广东省','湖北省')
        then so_saleorder.ctarcustname else so_saleorder.ctcustshortname end ) ,     
        so_saleorder.pk_custclass,   
-       so_saleorder.pk_areacl,
-       --so_saleorder.sohzt,
-      -- ' ' sozxkj,
-       /*so_saleorder.sotrantypename,
-       so_saleorder.soincomename,*/
+       so_saleorder.pk_areacl,      
        so_saleorder.sovnote,
        so_saleorder.pk_org,
        so_saleorder.ctnexchangerate ,
