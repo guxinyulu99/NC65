@@ -393,6 +393,6 @@ group by
        so_saleorder.sovbillcode,
        so_saleorder.socsaleorderid,
        so_saleorder.sodbilldate 
-       --so_saleorder.cctmanagebid,
+     
        
 
