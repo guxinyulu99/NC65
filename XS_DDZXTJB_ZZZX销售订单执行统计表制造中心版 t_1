@@ -394,5 +394,5 @@ group by
        so_saleorder.socsaleorderid,
        so_saleorder.sodbilldate 
        --so_saleorder.cctmanagebid,
-       --so_saleorder.cctmanageid
+       
 
