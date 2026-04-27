@@ -1,0 +1,341 @@
+select * from 
+(
+select
+'原合并报表' as 报表类型,
+报表体系编码,
+报表体系名称,
+报表体系编码||'—'||报表体系名称  编码名称,
+年度,
+会计期间,
+月份,
+指标名称,
+日期,
+期末余额,
+显示顺序,
+表顺序
+
+FROM 
+(
+ select
+  zcfz.RPT_TYPE as 报表类型
+  ,zcfz.ORGCODE as 报表体系编码
+  ,zcfz.ORGNAME as 报表体系名称
+  ,to_char(zcfz.CYEAR) as 年度
+  ,zcfz.CPERIOD as 会计期间
+  ,to_char(zcfz.PERIOD_DATE,'yyyy-mm') 月份
+  ,zcfz.RPT_PROJ as 指标名称
+  ,zcfz.PERIOD_DATE as 日期
+  ,zcfz.BALANCE_MNY as 期末余额
+  ,zcfz.DISP_SEQ as 显示顺序 
+  ,'1-资产负债表' AS 表顺序
+from DW_ZCFZ_DT zcfz
+where zcfz.Rpt_Type = '合并99' and RPT_PROJ not in ('期初差异','期末差异','期初负债率','期末负债率')
+and to_char(zcfz.PERIOD_DATE,'yyyy-mm')= '${yperiod}'
+
+union
+
+ select distinct
+  zcfz.RPT_TYPE as 报表类型
+  ,zcfz.ORGCODE as 报表体系编码
+  ,zcfz.ORGNAME as 报表体系名称
+  ,substr('${yperiod}',1,4) as 年度
+  ,0 as 会计期间
+  ,'${yperiod}' 月份
+  ,zcfz.RPT_PROJ as 指标名称
+  ,sysdate as 日期
+  ,0 as 期末余额
+  ,zcfz.DISP_SEQ as 显示顺序 
+  ,'1-资产负债表' AS 表顺序
+from DW_ZCFZ_DT zcfz
+where zcfz.Rpt_Type = '合并99' and RPT_PROJ not in ('期初差异','期末差异','期初负债率','期末负债率')
+
+union
+
+
+SELECT 
+lrb. RPT_TYPE 
+,lrb. ORGCODE 
+,lrb. ORGNAME 
+,to_char(lrb. CYEAR) 
+,lrb. CPERIOD 
+,to_char(lrb.PERIOD_DATE,'yyyy-mm') 
+,lrb. RPT_PROJ 
+,lrb. PERIOD_DATE 
+,lrb. CURR_YEAR 
+,lrb.DISP_SEQ 
+,'2-利润表'
+
+FROM DW_LRB_DT lrb
+where lrb.Rpt_Type = '合并99'  and RPT_PROJ not in ('营业收入','营业成本','综合毛利率','成本费用占营业收入的比重','成本费用利润率','期间费用率','销售费用率','管理费用率','研发费用率','财务费用率','所得税率','销售净利率')
+and to_char(lrb.PERIOD_DATE,'yyyy-mm')= '${yperiod}'  
+
+union
+
+
+SELECT distinct
+lrb. RPT_TYPE 
+,lrb. ORGCODE 
+,lrb. ORGNAME 
+,substr('${yperiod}',1,4) CYEAR 
+,0 CPERIOD 
+,'${yperiod}' 
+,lrb. RPT_PROJ 
+,sysdate PERIOD_DATE 
+,0 CURR_YEAR 
+,lrb.DISP_SEQ 
+,'2-利润表'
+FROM DW_LRB_DT lrb
+where lrb.Rpt_Type = '合并99'  and RPT_PROJ not in ('营业收入','营业成本','综合毛利率','成本费用占营业收入的比重','成本费用利润率','期间费用率','销售费用率','管理费用率','研发费用率','财务费用率','所得税率','销售净利率')
+  
+
+union
+
+
+select d.RPT_TYPE  as 报表类型,
+       d.ORGCODE   as 报表体系编码,
+       d.ORGNAME   as 报表体系名称,
+       to_char(d.CYEAR)     as 年度,
+       d.CPERIOD     as 会计期间,
+       to_char(d.PERIOD_DATE,'yyyy-mm') as 月份,
+       d.RPT_PROJ    as 指标项目,
+       d.PERIOD_DATE as 日期,
+       d.CURR_YEAR   as 本年累计,
+       d.DISP_SEQ as 显示顺序,
+       '3-现金流量表' AS 表顺序
+
+          from DW_XJLL_DT d
+         where d.Rpt_Type = '合并99'  and RPT_PROJ not in ('被冻结的银行存款','货币资金与结算中心存款','期末现金及现金等价物余额','其他货币资金余额（含期货保证金）','与现金流量表差异')
+         and to_char(d.PERIOD_DATE,'yyyy-mm')= '${yperiod}'
+         
+union
+
+select d.RPT_TYPE  as 报表类型,
+       d.ORGCODE   as 报表体系编码,
+       d.ORGNAME   as 报表体系名称,
+       substr('${yperiod}',1,4)     as 年度,
+       0     as 会计期间,
+       '${yperiod}' as 月份,
+       d.RPT_PROJ    as 指标项目,
+       sysdate as 日期,
+       0   as 本年累计,
+       d.DISP_SEQ as 显示顺序,
+       '3-现金流量表' AS 表顺序
+
+          from DW_XJLL_DT d
+         where d.Rpt_Type = '合并99'  and RPT_PROJ not in ('被冻结的银行存款','货币资金与结算中心存款','期末现金及现金等价物余额','其他货币资金余额（含期货保证金）','与现金流量表差异')
+         
+         
+union
+
+select d.RPT_TYPE  as 报表类型,
+       d.ORGCODE   as 报表体系编码,
+       d.ORGNAME   as 报表体系名称,
+       to_char(d.CYEAR)     as 年度,
+       d.CPERIOD     as 会计期间,
+       to_char(d.PERIOD_DATE,'yyyy-mm') as 月份,
+       d.RPT_PROJ    as 指标项目,
+       d.PERIOD_DATE as 日期,
+       d.CURR_YEAR   as 本年累计,
+       d.DISP_SEQ as 显示顺序,
+       '4-现金流量附表' AS 表顺序
+
+          from DW_XJLLFB_DT d
+         where d.Rpt_Type = '合并99' and RPT_PROJ <>'本月'
+         and to_char(d.PERIOD_DATE,'yyyy-mm')= '${yperiod}'
+         and d.DISP_SEQ<400
+         
+union
+
+select d.RPT_TYPE  as 报表类型,
+       d.ORGCODE   as 报表体系编码,
+       d.ORGNAME   as 报表体系名称,
+       substr('${yperiod}',1,4)     as 年度,
+       0     as 会计期间,
+       '${yperiod}' as 月份,
+       d.RPT_PROJ    as 指标项目,
+       sysdate as 日期,
+       0   as 本年累计,
+       d.DISP_SEQ as 显示顺序,
+       '4-现金流量附表' AS 表顺序
+
+          from DW_XJLLFB_DT d
+         where d.Rpt_Type = '合并99' and RPT_PROJ <>'本月'
+          and d.DISP_SEQ<400
+         
+
+
+) tmp
+where 报表体系编码 in ('1','10106','113','104','105','102A','10103HH','10103H','1010301','10199','199','106','109H','103A','108','10105','101','10107','10111','102','10109','111','110','121H','122H','120','130','131','132')
+
+
+union
+
+select
+'法人报表' as 报表类型,
+报表体系编码,
+报表体系名称,
+报表体系编码||'—'||报表体系名称  编码名称,
+年度,
+会计期间,
+月份,
+指标名称,
+日期,
+期末余额,
+显示顺序,
+表顺序
+FROM 
+(
+ select
+  zcfz.RPT_TYPE as 报表类型
+  ,zcfz.ORGCODE as 报表体系编码
+  ,zcfz.ORGNAME as 报表体系名称
+  ,to_char(zcfz.CYEAR) as 年度
+  ,zcfz.CPERIOD as 会计期间
+  ,to_char(zcfz.PERIOD_DATE,'yyyy-mm') 月份
+  ,zcfz.RPT_PROJ as 指标名称
+  ,zcfz.PERIOD_DATE as 日期
+  ,zcfz.BALANCE_MNY as 期末余额
+  ,zcfz.DISP_SEQ as 显示顺序 
+  ,'1-资产负债表' AS 表顺序
+from DW_ZCFZ_DT zcfz
+where zcfz.Rpt_Type = '单体' and RPT_PROJ not in ('期初差异','期末差异','期初负债率','期末负债率')
+and to_char(zcfz.PERIOD_DATE,'yyyy-mm')= '${yperiod}'
+
+union
+
+ select distinct
+  zcfz.RPT_TYPE as 报表类型
+  ,zcfz.ORGCODE as 报表体系编码
+  ,zcfz.ORGNAME as 报表体系名称
+  ,substr('${yperiod}',1,4) as 年度
+  ,0 as 会计期间
+  ,'${yperiod}' 月份
+  ,zcfz.RPT_PROJ as 指标名称
+  ,sysdate as 日期
+  ,0 as 期末余额
+  ,zcfz.DISP_SEQ as 显示顺序 
+  ,'1-资产负债表' AS 表顺序
+from DW_ZCFZ_DT zcfz
+where zcfz.Rpt_Type = '单体' and RPT_PROJ not in ('期初差异','期末差异','期初负债率','期末负债率')
+
+union
+
+
+SELECT 
+lrb. RPT_TYPE 
+,lrb. ORGCODE 
+,lrb. ORGNAME 
+,to_char(lrb. CYEAR) 
+,lrb. CPERIOD 
+,to_char(lrb.PERIOD_DATE,'yyyy-mm') 
+,lrb. RPT_PROJ 
+,lrb. PERIOD_DATE 
+,lrb. CURR_YEAR 
+,lrb.DISP_SEQ 
+,'2-利润表'
+
+FROM DW_LRB_DT lrb
+where lrb.Rpt_Type = '单体'  and RPT_PROJ not in ('营业收入','营业成本','综合毛利率','成本费用占营业收入的比重','成本费用利润率','期间费用率','销售费用率','管理费用率','研发费用率','财务费用率','所得税率','销售净利率')
+and to_char(lrb.PERIOD_DATE,'yyyy-mm')= '${yperiod}'  
+
+union
+
+
+SELECT distinct
+lrb. RPT_TYPE 
+,lrb. ORGCODE 
+,lrb. ORGNAME 
+,substr('${yperiod}',1,4) CYEAR 
+,0 CPERIOD 
+,'${yperiod}' 
+,lrb. RPT_PROJ 
+,sysdate PERIOD_DATE 
+,0 CURR_YEAR 
+,lrb.DISP_SEQ 
+,'2-利润表'
+FROM DW_LRB_DT lrb
+where lrb.Rpt_Type = '单体'  and RPT_PROJ not in ('营业收入','营业成本','综合毛利率','成本费用占营业收入的比重','成本费用利润率','期间费用率','销售费用率','管理费用率','研发费用率','财务费用率','所得税率','销售净利率')
+  
+
+union
+
+
+select d.RPT_TYPE  as 报表类型,
+       d.ORGCODE   as 报表体系编码,
+       d.ORGNAME   as 报表体系名称,
+       to_char(d.CYEAR)     as 年度,
+       d.CPERIOD     as 会计期间,
+       to_char(d.PERIOD_DATE,'yyyy-mm') as 月份,
+       d.RPT_PROJ    as 指标项目,
+       d.PERIOD_DATE as 日期,
+       d.CURR_YEAR   as 本年累计,
+       d.DISP_SEQ as 显示顺序,
+       '3-现金流量表' AS 表顺序
+
+          from DW_XJLL_DT d
+         where d.Rpt_Type = '单体'  and RPT_PROJ not in ('被冻结的银行存款','货币资金与结算中心存款','期末现金及现金等价物余额','其他货币资金余额（含期货保证金）','与现金流量表差异')
+         and to_char(d.PERIOD_DATE,'yyyy-mm')= '${yperiod}'
+         
+union
+
+select d.RPT_TYPE  as 报表类型,
+       d.ORGCODE   as 报表体系编码,
+       d.ORGNAME   as 报表体系名称,
+       substr('${yperiod}',1,4)     as 年度,
+       0     as 会计期间,
+       '${yperiod}' as 月份,
+       d.RPT_PROJ    as 指标项目,
+       sysdate as 日期,
+       0   as 本年累计,
+       d.DISP_SEQ as 显示顺序,
+       '3-现金流量表' AS 表顺序
+
+          from DW_XJLL_DT d
+         where d.Rpt_Type = '单体'  and RPT_PROJ not in ('被冻结的银行存款','货币资金与结算中心存款','期末现金及现金等价物余额','其他货币资金余额（含期货保证金）','与现金流量表差异')
+         
+         
+union
+
+select d.RPT_TYPE  as 报表类型,
+       d.ORGCODE   as 报表体系编码,
+       d.ORGNAME   as 报表体系名称,
+       to_char(d.CYEAR)     as 年度,
+       d.CPERIOD     as 会计期间,
+       to_char(d.PERIOD_DATE,'yyyy-mm') as 月份,
+       d.RPT_PROJ    as 指标项目,
+       d.PERIOD_DATE as 日期,
+       d.CURR_YEAR   as 本年累计,
+       d.DISP_SEQ as 显示顺序,
+       '4-现金流量附表' AS 表顺序
+
+          from DW_XJLLFB_DT d
+         where d.Rpt_Type = '单体' and RPT_PROJ <>'本月'
+         and to_char(d.PERIOD_DATE,'yyyy-mm')= '${yperiod}'
+         and d.DISP_SEQ<400
+         
+union
+
+select d.RPT_TYPE  as 报表类型,
+       d.ORGCODE   as 报表体系编码,
+       d.ORGNAME   as 报表体系名称,
+       substr('${yperiod}',1,4)     as 年度,
+       0     as 会计期间,
+       '${yperiod}' as 月份,
+       d.RPT_PROJ    as 指标项目,
+       sysdate as 日期,
+       0   as 本年累计,
+       d.DISP_SEQ as 显示顺序,
+       '4-现金流量附表' AS 表顺序
+
+          from DW_XJLLFB_DT d
+         where d.Rpt_Type = '单体' and RPT_PROJ <>'本月'  and d.DISP_SEQ<400
+         
+
+
+) tmp
+where 报表体系编码 in ('108','120','106','10601','110','11001','11002','107','10701','10901','109','103','10303','101','102','199','105','104','111','11101','10309','113','11301','131'
+,'10306','132','12001','130','10307','13001','122','12202','12203','121','12102','11103')
+
+)
+where   报表类型='${bblx}'
+order by 表顺序,显示顺序,报表体系编码
