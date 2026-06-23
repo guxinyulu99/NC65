@@ -1,0 +1,38 @@
+-- t2 原始备份
+select so_saleorder.csaleorderid soid,so_saleorder.vbillcode socode, max(ic_saleout_b.dbizdate) lastoutdate,
+sum(so_saleorder_b.nnum) zsonnum ,sum(so_saleorder_exe.sontotaloutnum)  zoutnum,
+--(case when sum(nvl(so_saleorder_b.nnum,0))>sum(nvl(so_saleorder_exe.sontotaloutnum,0)) then '未完结' else '已完结' end) outzt
+--(case when sum(nvl(so_saleorder_b.nnum,0))<sum(nvl(so_saleorder_exe.sontotaloutnum,0)) then '未完结' else '已完结' end) outzt
+(case when sum(nvl(so_saleorder_b.nnum,0))<0 then (case when sum(nvl(so_saleorder_b.nnum,0))<sum(nvl(ic_saleout_b.sontotaloutnum,0)) then '未完结' else '已完结' end)
+else (case when sum(nvl(so_saleorder_b.nnum,0))>sum(nvl(ic_saleout_b.sontotaloutnum,0)) then '未完结' else '已完结' end) end)  outzt
+FROM  so_saleorder_b so_saleorder_b
+  JOIN so_saleorder so_saleorder
+    ON (so_saleorder_b.csaleorderid = so_saleorder.csaleorderid AND  so_saleorder.dr = 0 and so_saleorder_b.dr = 0)
+-- and so_saleorder_b.frowstatus in (parameter('p_sohzt'))
+and (case  when nvl(so_saleorder_b.vbdef7, '~') = '~' then 999 else to_number(so_saleorder_b.vbdef7) end) in (parameter('p_sosohzt'))
+ --and (case  when nvl(so_saleorder_b.vbdef54, '~') = '~' then 999 else to_number(so_saleorder_b.vbdef54) end) in (parameter('p_soddxz'))
+--and nvl(so_saleorder.vdef3, '~') in (parameter('p_sosoddxz'))
+   join (select vbillcode, max(nvl(iversion,0) ) as iversion  from so_saleorder where dr = 0 group by vbillcode) tmp_so
+  on tmp_so.vbillcode = so_saleorder.vbillcode and tmp_so.iversion  = nvl(so_saleorder.iversion ,0)
+  LEFT JOIN (select so_saleorder_exe.csaleorderbid,
+             --sum(so_saleorder_exe.ntotalsendnum) sontotalsendnum,
+             sum(so_saleorder_exe.ntotaloutnum) sontotaloutnum
+             --sum(so_saleorder_exe.ntotalinvoicenum) sontotalinvoicenum,
+             --sum(so_saleorder_exe.ntotalpaymny) sontotalpaymny
+        from so_saleorder_exe so_saleorder_exe
+        where so_saleorder_exe.dr = 0
+        group by so_saleorder_exe.csaleorderbid
+        )so_saleorder_exe
+    ON so_saleorder_b.csaleorderbid = so_saleorder_exe.csaleorderbid 
+
+   LEFT JOIN (
+   select ic_saleout_b.cfirstbillbid ,ic_saleout_b.cfirstbillhid ,max(substr( ic_saleout_b.dbizdate, 1, 10)) dbizdate,
+   sum(nvl((case when ic_saleout_b.vbdef13='~' then ic_saleout_b.nnum else to_number(ic_saleout_b.vbdef13) end),0)) sontotaloutnum
+   from ic_saleout_b ic_saleout_b
+   join ic_saleout_h ic_saleout_h on ic_saleout_b.cgeneralhid =ic_saleout_h.cgeneralhid and ic_saleout_b.dr=0 and ic_saleout_h.dr=0
+   and ic_saleout_h.fbillflag not in ('1','6')
+   where substr( ic_saleout_b.dbizdate, 1, 10)>=parameter('p_soouts') and substr( ic_saleout_b.dbizdate, 1, 10)<=parameter('p_sooute')
+   group by ic_saleout_b.cfirstbillbid ,ic_saleout_b.cfirstbillhid)ic_saleout_b
+   on ic_saleout_b.cfirstbillhid=so_saleorder_b.csaleorderid  and ic_saleout_b.cfirstbillbid=so_saleorder_b.csaleorderbid
+   group by so_saleorder.vbillcode ,so_saleorder.csaleorderid
+   --having (sum(wlsl.ddxqnnum)<>0 or sum(wlsl.gdxqnnum)<>0 or sum(wlsl.numstormrp)<>0 or sum(wlsl.numstorxb)<>0 or sum(wlsl.ztnnum)<>0)
